@@ -1,0 +1,17 @@
+server:
+  host: "0.0.0.0"
+  port: 8080
+  read_timeout: 30
+  write_timeout: 30
+
+agent:
+  model: "qwen-turbo"
+  api_key: "your-api-key-here"  # 请替换为你的真实API密钥
+  base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  max_tokens: 2000
+  temperature: 0.7
+  system_prompt: "你是一个有用的AI助手，请用中文回答用户的问题。"
+
+log:
+  level: "info"
+  file: "logs/agent.log"
