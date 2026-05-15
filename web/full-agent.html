@@ -300,6 +300,38 @@
                     <input type="checkbox" id="newTab" checked>
                     <label for="newTab">在新标签页打开</label>
                 </div>
+                <div class="option">
+                    <button onclick="toggleGameList()" style="padding: 8px 16px; font-size: 14px;">🎮 管理游戏列表</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏列表管理弹窗 -->
+    <div id="gameListModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; border-radius: 15px; padding: 30px; max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0; color: #333;">🎮 游戏列表管理</h2>
+                <button onclick="toggleGameList()" style="background: #f44336; padding: 8px 16px; font-size: 14px;">✕ 关闭</button>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <input type="text" id="newGameInput" placeholder="输入新游戏名称..." style="flex: 1; padding: 10px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                    <button onclick="addGame()" style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">➕ 添加</button>
+                </div>
+                <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; font-size: 13px; color: #666;">
+                    💡 提示：添加后立即可用，无需刷新页面。数据保存在浏览器本地存储中。
+                </div>
+            </div>
+
+            <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; color: #555; font-size: 16px;">当前游戏列表 (<span id="gameCount">0</span> 个)</h3>
+                <button onclick="resetGameList()" style="padding: 6px 12px; background: #ff9800; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">🔄 重置为默认</button>
+            </div>
+
+            <div id="gameListContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">
+                <!-- 游戏列表将在这里动态生成 -->
             </div>
         </div>
     </div>
@@ -308,8 +340,8 @@
         const API_BASE = 'http://localhost:8080';
         let isConnected = false;
 
-        // 常见游戏名称列表
-        const gameNames = [
+        // 默认游戏名称列表
+        const defaultGameNames = [
             '原神', 'genshin impact',
             '崩坏星穹铁道', '崩坏', '星穹铁道', 'honkai star rail',
             '黑神话悟空', '黑神话', 'black myth',
@@ -346,6 +378,29 @@
             '摩尔庄园',
             '奥比岛'
         ];
+
+        // 从 localStorage 加载游戏列表，如果没有则使用默认
+        let gameNames = [];
+        function loadGameList() {
+            const saved = localStorage.getItem('gameNames');
+            if (saved) {
+                try {
+                    gameNames = JSON.parse(saved);
+                } catch (e) {
+                    gameNames = [...defaultGameNames];
+                }
+            } else {
+                gameNames = [...defaultGameNames];
+            }
+        }
+
+        // 保存游戏列表到 localStorage
+        function saveGameList() {
+            localStorage.setItem('gameNames', JSON.stringify(gameNames));
+        }
+
+        // 初始化时加载游戏列表
+        loadGameList();
 
         // 检查服务器连接
         async function checkConnection() {
@@ -525,6 +580,122 @@
         window.onload = function() {
             document.getElementById('userInput').focus();
         };
+
+        // ========== 游戏列表管理功能 ==========
+
+        // 切换游戏列表弹窗
+        function toggleGameList() {
+            const modal = document.getElementById('gameListModal');
+            if (modal.style.display === 'none' || modal.style.display === '') {
+                modal.style.display = 'flex';
+                renderGameList();
+            } else {
+                modal.style.display = 'none';
+            }
+        }
+
+        // 渲染游戏列表
+        function renderGameList() {
+            const container = document.getElementById('gameListContainer');
+            const countElement = document.getElementById('gameCount');
+            
+            container.innerHTML = '';
+            countElement.textContent = gameNames.length;
+
+            gameNames.forEach((game, index) => {
+                const gameCard = document.createElement('div');
+                gameCard.style.cssText = `
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 12px 15px;
+                    border-radius: 8px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-size: 14px;
+                    animation: fadeIn 0.3s ease-in;
+                `;
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = game;
+                nameSpan.style.flex = '1';
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '✕';
+                deleteBtn.style.cssText = `
+                    background: rgba(255,255,255,0.3);
+                    border: none;
+                    color: white;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    font-size: 12px;
+                    margin-left: 8px;
+                    transition: all 0.2s;
+                `;
+                deleteBtn.onmouseover = () => deleteBtn.style.background = 'rgba(255,255,255,0.5)';
+                deleteBtn.onmouseout = () => deleteBtn.style.background = 'rgba(255,255,255,0.3)';
+                deleteBtn.onclick = () => removeGame(index);
+                
+                gameCard.appendChild(nameSpan);
+                gameCard.appendChild(deleteBtn);
+                container.appendChild(gameCard);
+            });
+        }
+
+        // 添加游戏
+        function addGame() {
+            const input = document.getElementById('newGameInput');
+            const gameName = input.value.trim();
+            
+            if (!gameName) {
+                alert('请输入游戏名称！');
+                return;
+            }
+
+            // 检查是否已存在
+            if (gameNames.some(g => g.toLowerCase() === gameName.toLowerCase())) {
+                alert('该游戏已存在于列表中！');
+                return;
+            }
+
+            gameNames.push(gameName);
+            saveGameList();
+            renderGameList();
+            input.value = '';
+            input.focus();
+        }
+
+        // 删除游戏
+        function removeGame(index) {
+            if (confirm(`确定要删除 "${gameNames[index]}" 吗？`)) {
+                gameNames.splice(index, 1);
+                saveGameList();
+                renderGameList();
+            }
+        }
+
+        // 重置为默认列表
+        function resetGameList() {
+            if (confirm('确定要重置为默认游戏列表吗？这将清除所有自定义添加的游戏。')) {
+                gameNames = [...defaultGameNames];
+                saveGameList();
+                renderGameList();
+            }
+        }
+
+        // 回车键添加游戏
+        document.addEventListener('DOMContentLoaded', function() {
+            const newGameInput = document.getElementById('newGameInput');
+            if (newGameInput) {
+                newGameInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        addGame();
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
