@@ -4,6 +4,7 @@ import (
 	"ai-agent/internal/agent"
 	"ai-agent/internal/config"
 	"ai-agent/pkg/logger"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -11,7 +12,8 @@ import (
 )
 
 type ChatRequest struct {
-	Message string `json:"message" binding:"required"`
+	Message  string              `json:"message,omitempty"`
+	Messages []agent.ChatMessage `json:"messages,omitempty"`
 }
 
 type ChatResponse struct {
@@ -76,11 +78,24 @@ func handleChat(agentService *agent.AgentService) gin.HandlerFunc {
 			return
 		}
 
-		logger.Info("Received chat request: " + req.Message)
-
-		// 这里可以扩展为支持多轮对话
-		messages := []agent.ChatMessage{
-			{Role: "user", Content: req.Message},
+		var messages []agent.ChatMessage
+		
+		// 如果提供了 messages 数组，使用它（多轮对话）
+		if len(req.Messages) > 0 {
+			messages = req.Messages
+			logger.Info("Received multi-turn chat request with " + fmt.Sprintf("%d", len(messages)) + " messages")
+		} else if req.Message != "" {
+			// 否则使用单条消息（向后兼容）
+			messages = []agent.ChatMessage{
+				{Role: "user", Content: req.Message},
+			}
+			logger.Info("Received single chat request: " + req.Message)
+		} else {
+			c.JSON(http.StatusBadRequest, ChatResponse{
+				Success: false,
+				Error:   "Either 'message' or 'messages' must be provided",
+			})
+			return
 		}
 
 		response, err := agentService.Chat(messages)
