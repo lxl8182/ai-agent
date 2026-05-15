@@ -358,11 +358,11 @@
             <div class="options">
                 <div class="option">
                     <input type="checkbox" id="autoSearch" checked>
-                    <label for="autoSearch">检测到游戏时自动打开浏览器搜索</label>
+                    <label for="autoSearch">检测到游戏时自动搜索并整合分析</label>
                 </div>
                 <div class="option">
-                    <input type="checkbox" id="newTab" checked>
-                    <label for="newTab">在新标签页打开</label>
+                    <input type="checkbox" id="openBrowser" checked>
+                    <label for="openBrowser">同时打开浏览器查看原始结果</label>
                 </div>
                 <div class="option">
                     <button onclick="toggleGameList()" style="padding: 8px 16px; font-size: 14px;">🎮 管理游戏列表</button>
@@ -570,29 +570,71 @@
             // 检测游戏
             const detectedGame = detectGame(text);
             const autoSearch = document.getElementById('autoSearch').checked;
+            const openBrowser = document.getElementById('openBrowser').checked;
 
             if (detectedGame && autoSearch) {
-                // 检测到游戏，先显示提示
-                addMessage(`🔍 检测到游戏"${detectedGame}"，正在调用 AI 回答并准备搜索...`, false, 'searching');
+                // 检测到游戏，显示正在搜索和分析
+                addMessage(`🔍 检测到游戏"${detectedGame}"，正在搜索最新攻略并整合分析...`, false, 'searching');
                 
-                // 打开浏览器搜索
-                setTimeout(() => {
-                    const searchUrl = buildSearchUrl(text);
-                    const newTab = document.getElementById('newTab').checked;
-                    
-                    if (newTab) {
+                // 如果勾选了打开浏览器，先打开
+                if (openBrowser) {
+                    setTimeout(() => {
+                        const searchUrl = buildSearchUrl(text);
                         window.open(searchUrl, '_blank');
-                    } else {
-                        window.location.href = searchUrl;
+                    }, 500);
+                }
+
+                // 调用后端 API 获取搜索结果并整合分析
+                try {
+                    const response = await fetch(`${API_BASE}/api/v1/smart-chat`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: text,
+                            use_search: true  // 标记使用搜索
+                        })
+                    });
+
+                    hideTyping();
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
-                }, 500);
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // 显示整合后的分析结果
+                        addMessage(data.data, false, 'success');
+                        
+                        if (openBrowser) {
+                            addMessage(`✅ 已在浏览器中打开原始搜索结果，上方为 AI 整合分析！`, false);
+                        } else {
+                            addMessage(`✅ 已完成搜索结果的整合分析！`, false);
+                        }
+                    } else {
+                        throw new Error(data.error || 'Unknown error');
+                    }
+
+                } catch (error) {
+                    hideTyping();
+                    addMessage(`❌ 错误: ${error.message}<br><br>请确保后端服务正在运行。`, false);
+                } finally {
+                    // 恢复输入
+                    input.disabled = false;
+                    sendBtn.disabled = false;
+                    input.focus();
+                }
+                
+                return; // 游戏问题处理完毕，直接返回
             }
 
-            // 显示打字指示器
+            // 非游戏问题，正常调用 LLM
             showTyping();
 
             try {
-                // 调用后端 LLM API
                 const response = await fetch(`${API_BASE}/api/v1/smart-chat`, {
                     method: 'POST',
                     headers: {
@@ -612,13 +654,7 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    // 显示 AI 回答
-                    const responseClass = detectedGame ? 'success' : '';
-                    addMessage(data.data, false, responseClass);
-                    
-                    if (detectedGame) {
-                        addMessage(`✅ 已在浏览器中打开"${detectedGame}"的搜索结果！`, false);
-                    }
+                    addMessage(data.data, false);
                 } else {
                     throw new Error(data.error || 'Unknown error');
                 }
@@ -627,7 +663,6 @@
                 hideTyping();
                 addMessage(`❌ 错误: ${error.message}<br><br>请确保后端服务正在运行。`, false);
             } finally {
-                // 恢复输入
                 input.disabled = false;
                 sendBtn.disabled = false;
                 input.focus();
