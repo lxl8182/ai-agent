@@ -25,6 +25,9 @@ ai-agent/
 - ⚙️ YAML配置文件管理
 - 📝 结构化日志记录
 - 🔧 可扩展的Agent架构
+- 🎮 **新增：游戏攻略搜索智能体**（自动搜索最新攻略）
+- 🔍 **新增：网络搜索工具集成**（Bing/Google）
+- 💡 **新增：智能意图识别**（自动判断是否需要搜索）
 
 ## 快速开始
 
@@ -99,6 +102,31 @@ Content-Type: application/json
   "message": "你的消息内容"
 }
 ```
+
+### ⭐ 智能对话（推荐 - 支持网络搜索）
+```
+POST /api/v1/smart-chat
+Content-Type: application/json
+
+{
+  "message": "原神 雷电将军怎么培养"
+}
+```
+
+**特点**:
+- ✅ 自动识别游戏相关问题
+- ✅ 调用 Bing/Google 搜索最新攻略
+- ✅ 整合搜索结果生成详细回答
+- ✅ 非游戏问题直接回答，不调用搜索
+
+**示例**:
+```bash
+curl -X POST http://localhost:8080/api/v1/smart-chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "黑神话悟空 虎先锋怎么打"}'
+```
+
+详见 [GAME_GUIDE_AGENT.md](GAME_GUIDE_AGENT.md)
 
 ## 配置说明
 

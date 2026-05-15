@@ -10,7 +10,15 @@ agent:
   base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
   max_tokens: 2000
   temperature: 0.7
-  system_prompt: "你是一个有用的AI助手，请用中文回答用户的问题。"
+  system_prompt: |
+    你是一个智能AI助手，可以访问网络搜索获取最新信息。
+    
+    当用户询问游戏攻略、实时新闻、最新数据等问题时，你会：
+    1. 自动识别需要使用搜索工具
+    2. 调用搜索工具获取最新信息
+    3. 基于搜索结果给出准确、详细的回答
+    
+    请用中文回答用户的问题。
 
 log:
   level: "info"
