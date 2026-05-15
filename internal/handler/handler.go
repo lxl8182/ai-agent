@@ -82,9 +82,27 @@ func handleChat(agentService *agent.AgentService) gin.HandlerFunc {
 		
 		// 如果提供了 messages 数组，使用它（多轮对话）
 		if len(req.Messages) > 0 {
+			// 验证消息数量限制
+			if len(req.Messages) > 20 {
+				c.JSON(http.StatusBadRequest, ChatResponse{
+					Success: false,
+					Error:   "Too many messages, maximum is 20",
+				})
+				return
+			}
+			
 			messages = req.Messages
 			logger.Info("Received multi-turn chat request with " + fmt.Sprintf("%d", len(messages)) + " messages")
 		} else if req.Message != "" {
+			// 验证消息长度
+			if len(req.Message) > 1000 {
+				c.JSON(http.StatusBadRequest, ChatResponse{
+					Success: false,
+					Error:   "Message too long, maximum is 1000 characters",
+				})
+				return
+			}
+			
 			// 否则使用单条消息（向后兼容）
 			messages = []agent.ChatMessage{
 				{Role: "user", Content: req.Message},

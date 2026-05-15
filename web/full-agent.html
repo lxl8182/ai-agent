@@ -326,7 +326,8 @@
         <div class="status-bar">
             <div class="status-indicator" id="statusIndicator"></div>
             <span id="statusText">正在连接服务器...</span>
-            <button onclick="clearConversationHistory()" style="margin-left: auto; padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">🗑️ 清空对话</button>
+            <button onclick="exportConversation()" style="margin-left: auto; padding: 6px 12px; background: #4caf50; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; margin-right: 8px;">📥 导出对话</button>
+            <button onclick="clearConversationHistory()" style="padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">🗑️ 清空对话</button>
         </div>
 
         <div class="chat-area" id="chatArea">
@@ -352,6 +353,7 @@
                     id="userInput" 
                     placeholder="输入你的问题..."
                     autocomplete="off"
+                    maxlength="500"
                 >
                 <button id="sendBtn" onclick="sendMessage()">发送</button>
             </div>
@@ -453,6 +455,38 @@
                     </div>
                 `;
             }
+        }
+        
+        // 导出对话为 Markdown 文件
+        function exportConversation() {
+            if (conversationHistory.length === 0) {
+                alert('当前没有对话记录可导出！');
+                return;
+            }
+            
+            let markdown = '# AI 游戏攻略助手 - 对话记录\n\n';
+            markdown += `导出时间: ${new Date().toLocaleString('zh-CN')}\n\n`;
+            markdown += '---\n\n';
+            
+            conversationHistory.forEach((msg, index) => {
+                const role = msg.role === 'user' ? '👤 用户' : '🤖 AI';
+                const time = new Date(msg.timestamp).toLocaleString('zh-CN');
+                markdown += `### ${role} (${time})\n\n`;
+                markdown += `${msg.content}\n\n`;
+                if (index < conversationHistory.length - 1) {
+                    markdown += '---\n\n';
+                }
+            });
+            
+            const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `对话记录_${new Date().getTime()}.md`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         // 默认游戏名称列表
@@ -677,7 +711,25 @@
 
             } catch (error) {
                 hideTyping();
-                addMessage(`❌ 错误: ${error.message}<br><br>请确保后端服务正在运行。`, false);
+                
+                // 如果是网络错误，提供重试选项
+                if (error.message.includes('fetch') || error.message.includes('Network')) {
+                    const retryDiv = document.createElement('div');
+                    retryDiv.className = 'message bot-message';
+                    retryDiv.innerHTML = `
+                        <div class="bubble" style="background: #fff3cd; border-color: #ffc107;">
+                            ❌ 网络连接失败<br><br>
+                            <button onclick="retryLastMessage('${text.replace(/'/g, "\\'")}')" 
+                                    style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                                🔄 重试
+                            </button>
+                        </div>
+                    `;
+                    chatArea.appendChild(retryDiv);
+                    chatArea.scrollTop = chatArea.scrollHeight;
+                } else {
+                    addMessage(`❌ 错误: ${error.message}<br><br>请确保后端服务正在运行。`, false);
+                }
             } finally {
                 input.disabled = false;
                 sendBtn.disabled = false;
@@ -691,6 +743,14 @@
                 sendMessage();
             }
         });
+
+        // 重试最后一次消息
+        let lastFailedMessage = '';
+        function retryLastMessage(message) {
+            lastFailedMessage = message;
+            document.getElementById('userInput').value = message;
+            sendMessage();
+        }
 
         // 页面加载时检查连接
         checkConnection();
