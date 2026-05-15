@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏攻略快速搜索</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1em;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .option-group {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .option-group h3 {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .radio-option:last-child {
+            margin-bottom: 0;
+        }
+
+        .radio-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .radio-option label {
+            cursor: pointer;
+            color: #555;
+            font-size: 0.95em;
+        }
+
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-option label {
+            cursor: pointer;
+            color: #555;
+        }
+
+        .quick-tags {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .quick-tags h3 {
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 1em;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
+        }
+
+        .tag.blue {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .tag.green {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .tag.orange {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            border-radius: 6px;
+            color: #1976d2;
+            font-size: 0.9em;
+        }
+
+        .tips {
+            margin-top: 15px;
+            padding: 15px;
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            border-radius: 6px;
+            color: #f57c00;
+            font-size: 0.85em;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 游戏攻略搜索</h1>
+        <p class="subtitle">无需 API，直接打开浏览器搜索最新攻略</p>
+
+        <div class="search-box">
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="例如：原神 雷电将军培养、黑神话悟空 虎先锋打法"
+                autocomplete="off"
+            >
+            <button onclick="doSearch()">🔍 搜索</button>
+        </div>
+
+        <div class="options">
+            <div class="option-group">
+                <h3>🌐 选择搜索引擎</h3>
+                <div class="radio-option">
+                    <input type="radio" name="engine" id="bing" value="bing" checked>
+                    <label for="bing">Bing（推荐）</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" name="engine" id="google" value="google">
+                    <label for="google">Google</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" name="engine" id="baidu" value="baidu">
+                    <label for="baidu">百度</label>
+                </div>
+            </div>
+
+            <div class="option-group">
+                <h3>⚙️ 搜索选项</h3>
+                <div class="checkbox-option">
+                    <input type="checkbox" id="autoOpen" checked>
+                    <label for="autoOpen">自动打开浏览器</label>
+                </div>
+                <div class="checkbox-option" style="margin-top: 8px;">
+                    <input type="checkbox" id="newTab" checked>
+                    <label for="newTab">在新标签页打开</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="info">
+            💡 <strong>提示：</strong>此工具不需要任何 API Key，直接在浏览器中打开搜索结果页面。
+        </div>
+
+        <div class="tips">
+            📝 <strong>使用技巧：</strong>
+            <ul style="margin-left: 20px; margin-top: 5px;">
+                <li>输入游戏名 + 关键词（如"原神 角色培养"）</li>
+                <li>可以添加更多细节（如"黑神话 虎先锋 打法技巧"）</li>
+                <li>勾选"自动打开浏览器"可快速查看结果</li>
+            </ul>
+        </div>
+
+        <div class="quick-tags">
+            <h3>⚡ 快速搜索热门攻略</h3>
+            <div class="tags">
+                <button class="tag blue" onclick="quickSearch('原神 雷电将军培养')">原神 雷电将军</button>
+                <button class="tag orange" onclick="quickSearch('黑神话悟空 虎先锋打法')">黑神话 虎先锋</button>
+                <button class="tag green" onclick="quickSearch('塞尔达传说 王国之泪 神庙位置')">塞尔达 神庙</button>
+                <button class="tag blue" onclick="quickSearch('王者荣耀 S35赛季上分英雄')">王者上分</button>
+                <button class="tag orange" onclick="quickSearch('崩坏星穹铁道 黄泉配队')">星铁 黄泉</button>
+                <button class="tag green" onclick="quickSearch('艾尔登法环 女武神打法')">法环 女武神</button>
+                <button class="tag blue" onclick="quickSearch('博德之门3 职业推荐')">博德之门3</button>
+                <button class="tag orange" onclick="quickSearch('幻兽帕鲁 配种公式')">幻兽帕鲁</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 执行搜索
+        function doSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            
+            if (!query) {
+                alert('请输入搜索内容！');
+                return;
+            }
+
+            performSearch(query);
+        }
+
+        // 快速搜索
+        function quickSearch(query) {
+            document.getElementById('searchInput').value = query;
+            performSearch(query);
+        }
+
+        // 执行搜索逻辑
+        function performSearch(query) {
+            // 获取选中的搜索引擎
+            const engine = document.querySelector('input[name="engine"]:checked').value;
+            const autoOpen = document.getElementById('autoOpen').checked;
+            const newTab = document.getElementById('newTab').checked;
+
+            // 构建搜索 URL
+            let searchUrl = '';
+            const encodedQuery = encodeURIComponent(query + ' 攻略');
+
+            switch(engine) {
+                case 'bing':
+                    searchUrl = `https://www.bing.com/search?q=${encodedQuery}`;
+                    break;
+                case 'google':
+                    searchUrl = `https://www.google.com/search?q=${encodedQuery}`;
+                    break;
+                case 'baidu':
+                    searchUrl = `https://www.baidu.com/s?wd=${encodedQuery}`;
+                    break;
+            }
+
+            // 如果勾选了自动打开
+            if (autoOpen) {
+                if (newTab) {
+                    window.open(searchUrl, '_blank');
+                } else {
+                    window.location.href = searchUrl;
+                }
+            } else {
+                // 不自动打开，显示链接让用户点击
+                const resultHtml = `
+                    <div style="margin-top: 20px; padding: 20px; background: #f0f0f0; border-radius: 8px;">
+                        <h3 style="margin-bottom: 10px; color: #333;">🔗 搜索结果链接</h3>
+                        <p style="margin-bottom: 15px; color: #666;">点击以下链接在浏览器中查看：</p>
+                        <a href="${searchUrl}" target="_blank" 
+                           style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                  color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                            点击查看搜索结果
+                        </a>
+                    </div>
+                `;
+                
+                // 移除旧结果
+                const oldResult = document.querySelector('.search-result');
+                if (oldResult) {
+                    oldResult.remove();
+                }
+
+                // 添加新结果
+                const div = document.createElement('div');
+                div.className = 'search-result';
+                div.innerHTML = resultHtml;
+                document.querySelector('.container').appendChild(div);
+            }
+        }
+
+        // 回车键搜索
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                doSearch();
+            }
+        });
+
+        // 页面加载时聚焦输入框
+        window.onload = function() {
+            document.getElementById('searchInput').focus();
+        };
+    </script>
+</body>
+</html>

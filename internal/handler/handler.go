@@ -28,6 +28,9 @@ func SetupRouter(agentService *agent.AgentService, serverCfg config.ServerConfig
 	router.GET("/", func(c *gin.Context) {
 		c.File("./web/index.html")
 	})
+	router.GET("/search", func(c *gin.Context) {
+		c.File("./web/simple-search.html")
+	})
 
 	// 设置超时
 	router.Use(func(c *gin.Context) {
