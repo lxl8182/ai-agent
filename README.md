@@ -1,64 +1,36 @@
-# AI Agent Project
+# 🎮 AI 游戏攻略助手
 
-一个基于Go语言的AI Agent服务项目，提供RESTful API接口与大语言模型进行交互。
+一个基于 Go 语言的智能游戏攻略助手，能够自动检测游戏问题并打开浏览器搜索最新攻略，同时提供 AI 智能对话功能。
 
-## 项目结构
+## ✨ 核心功能
 
-```
-ai-agent/
-├── cmd/server/          # 主程序入口
-├── configs/             # 配置文件
-├── internal/            # 内部包
-│   ├── agent/          # Agent核心逻辑
-│   ├── config/         # 配置管理
-│   └── handler/        # HTTP处理器
-├── pkg/                # 公共包
-│   └── logger/         # 日志模块
-├── go.mod              # Go模块文件
-└── README.md           # 项目说明
-```
+- 🤖 **AI 智能对话** - 接入 LLM（通义千问等），支持多轮对话
+- 🎮 **游戏智能检测** - 自动识别 60+ 款热门游戏
+- 🌐 **自动浏览器搜索** - 检测到游戏问题时自动打开浏览器搜索
+- 💾 **对话历史记忆** - 自动保存对话记录，刷新页面不丢失
+- 📝 **Markdown 渲染** - 美观的格式化输出
+- ⚙️ **游戏列表管理** - 可实时添加/删除游戏，无需修改代码
 
-## 功能特性
-
-- 🤖 支持OpenAI兼容的API接口
-- 🌐 RESTful API设计
-- ⚙️ YAML配置文件管理
-- 📝 结构化日志记录
-- 🔧 可扩展的Agent架构
-- 🎮 **新增：游戏攻略搜索智能体**（自动搜索最新攻略）
-- 🔍 **新增：网络搜索工具集成**（Bing/Google）
-- 💡 **新增：智能意图识别**（自动判断是否需要搜索）
-
-## 快速开始
+## 🚀 快速开始
 
 ### 1. 环境要求
 
 - Go 1.21+
-- OpenAI API Key（或其他兼容的LLM API）
+- LLM API Key（阿里云通义千问等）
 
-### 2. 配置API密钥
+### 2. 配置 API 密钥
 
-**重要：** 为了保护你的API密钥，有两种方式：
+编辑 `configs/config.yaml`：
 
-#### 方式1：使用配置文件（本地开发）
-```bash
-# 复制配置模板
-cp configs/config.yaml.example configs/config.yaml
-
-# 编辑配置文件，填入你的API密钥
-# 注意：configs/config.yaml 已在 .gitignore 中，不会被提交到Git
+```yaml
+agent:
+  model: "qwen-turbo"
+  api_key: "sk-your-api-key-here"  # ← 填入你的 API Key
+  base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
 ```
 
-#### 方式2：使用环境变量（推荐，更安全）
-```bash
-# Windows PowerShell
-$env:AGENT_API_KEY="sk-your-api-key-here"
-
-# Linux/Mac
-export AGENT_API_KEY="sk-your-api-key-here"
-```
-
-详见 [ENV_SETUP.md](ENV_SETUP.md) 和 [GITHUB_UPLOAD_GUIDE.md](GITHUB_UPLOAD_GUIDE.md)
+**获取 API Key**:
+- 阿里云通义千问: https://dashscope.console.aliyun.com/
 
 ### 3. 安装依赖
 
@@ -74,116 +46,78 @@ go run cmd/server/main.go
 
 服务将在 `http://localhost:8080` 启动
 
-**注意：** 如果使用环境变量配置，确保在运行前已设置 `AGENT_API_KEY` 等变量。
+## 🌐 访问前端页面
 
-## API接口
+打开浏览器访问：
 
-### 健康检查
 ```
-GET /health
-```
-
-### 简单聊天
-```
-POST /api/v1/simple-chat
-Content-Type: application/json
-
-{
-  "message": "你好，请介绍一下你自己"
-}
+http://localhost:8080/agent
 ```
 
-### 高级聊天（支持多轮对话）
+## 💡 使用示例
+
+### 游戏问题（自动打开浏览器）
+
+**输入**: "原神 雷电将军怎么培养"
+
+**效果**:
+1. 🌐 自动打开新标签页，显示 Bing 搜索结果
+2. 💬 AI 助手提供基于训练数据的建议
+
+### 普通问题
+
+**输入**: "什么是人工智能"
+
+**效果**:
+- 💬 AI 直接回答
+- ❌ 不打开浏览器
+
+## 📚 相关文档
+
+- 📘 [使用说明.md](使用说明.md) - 详细使用指南
+- 📗 [完整AI助手指南.md](完整AI助手指南.md) - 功能详细说明
+- 📙 [架构设计.md](架构设计.md) - 技术架构说明
+- 📕 [API使用示例.md](API使用示例.md) - API 调用示例
+- 📒 [更新日志.md](更新日志.md) - 版本更新记录
+
+## 🛠️ 技术栈
+
+- **后端**: Go 1.21 + Gin Framework
+- **日志**: Zap 结构化日志
+- **前端**: HTML5 + JavaScript + Marked.js
+- **配置**: YAML
+- **LLM**: 阿里云通义千问（可替换）
+
+## 📁 项目结构
+
 ```
-POST /api/v1/chat
-Content-Type: application/json
-
-{
-  "message": "你的消息内容"
-}
-```
-
-### ⭐ 智能对话（推荐 - 支持网络搜索）
-```
-POST /api/v1/smart-chat
-Content-Type: application/json
-
-{
-  "message": "原神 雷电将军怎么培养"
-}
-```
-
-**特点**:
-- ✅ 自动识别游戏相关问题
-- ✅ 调用 Bing/Google 搜索最新攻略
-- ✅ 整合搜索结果生成详细回答
-- ✅ 非游戏问题直接回答，不调用搜索
-
-**示例**:
-```bash
-curl -X POST http://localhost:8080/api/v1/smart-chat \
-  -H "Content-Type: application/json" \
-  -d '{"message": "黑神话悟空 虎先锋怎么打"}'
-```
-
-详见 [GAME_GUIDE_AGENT.md](GAME_GUIDE_AGENT.md)
-
-## 配置说明
-
-### 服务器配置
-- `host`: 监听地址
-- `port`: 监听端口
-- `read_timeout`: 读取超时时间（秒）
-- `write_timeout`: 写入超时时间（秒）
-
-### Agent配置
-- `model`: LLM模型名称
-- `api_key`: API密钥
-- `base_url`: API基础URL
-- `max_tokens`: 最大token数
-- `temperature`: 温度参数（0-1）
-- `system_prompt`: 系统提示词
-
-### 日志配置
-- `level`: 日志级别（debug/info/warn/error）
-- `file`: 日志文件路径
-
-## 扩展开发
-
-### 添加新的Agent功能
-
-在 `internal/agent/agent.go` 中添加新方法：
-
-```go
-func (a *AgentService) YourNewFunction(params string) (string, error) {
-    // 实现你的逻辑
-}
+ai-agent/
+├── cmd/server/          # 主程序入口
+├── configs/             # 配置文件
+├── internal/            # 内部包
+│   ├── agent/          # Agent核心逻辑
+│   ├── config/         # 配置管理
+│   └── handler/        # HTTP处理器
+├── pkg/logger/         # 日志模块
+├── web/                # 前端页面
+│   └── full-agent.html # 唯一前端页面
+└── README.md           # 项目说明
 ```
 
-### 添加新的API端点
+## 🔧 扩展开发
+
+### 添加新的游戏
+
+在页面中点击“🎮 管理游戏列表”按钮，即可实时添加/删除游戏，无需修改代码。
+
+### 添加新的 API 端点
 
 在 `internal/handler/handler.go` 中添加新的处理函数和路由。
 
-## 部署
-
-### Docker部署（可选）
-
-创建 `Dockerfile`:
-
-```dockerfile
-FROM golang:1.21-alpine AS builder
-WORKDIR /app
-COPY . .
-RUN go build -o server cmd/server/main.go
-
-FROM alpine:latest
-WORKDIR /app
-COPY --from=builder /app/server .
-COPY configs ./configs
-EXPOSE 8080
-CMD ["./server"]
-```
-
-## 许可证
+## 📝 许可证
 
 MIT License
+
+---
+
+**祝你使用愉快！** 🎮✨

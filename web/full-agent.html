@@ -326,6 +326,7 @@
         <div class="status-bar">
             <div class="status-indicator" id="statusIndicator"></div>
             <span id="statusText">正在连接服务器...</span>
+            <button onclick="clearConversationHistory()" style="margin-left: auto; padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">🗑️ 清空对话</button>
         </div>
 
         <div class="chat-area" id="chatArea">
@@ -400,6 +401,59 @@
     <script>
         const API_BASE = 'http://localhost:8080';
         let isConnected = false;
+        
+        // 对话历史记录
+        let conversationHistory = [];
+        
+        // 从 localStorage 加载对话历史
+        function loadConversationHistory() {
+            const saved = localStorage.getItem('conversationHistory');
+            if (saved) {
+                try {
+                    conversationHistory = JSON.parse(saved);
+                    // 恢复之前的对话到界面
+                    conversationHistory.forEach(msg => {
+                        addMessage(msg.content, msg.role === 'user', '');
+                    });
+                } catch (e) {
+                    conversationHistory = [];
+                }
+            }
+        }
+        
+        // 保存对话历史到 localStorage
+        function saveConversationHistory() {
+            // 只保留最近 50 条消息
+            if (conversationHistory.length > 50) {
+                conversationHistory = conversationHistory.slice(-50);
+            }
+            localStorage.setItem('conversationHistory', JSON.stringify(conversationHistory));
+        }
+        
+        // 清空对话历史
+        function clearConversationHistory() {
+            if (confirm('确定要清空所有对话记录吗？')) {
+                conversationHistory = [];
+                localStorage.removeItem('conversationHistory');
+                // 清空聊天区域，只保留欢迎消息
+                const chatArea = document.getElementById('chatArea');
+                chatArea.innerHTML = `
+                    <div class="message bot-message">
+                        <div class="bubble">
+                            👋 你好！我是 AI 游戏攻略助手。<br><br>
+                            🎯 我可以：<br>
+                            • 回答你的任何问题（接入 LLM）<br>
+                            • 检测游戏相关问题并自动打开浏览器搜索<br>
+                            • 提供结构化的游戏攻略建议<br><br>
+                            💡 试试问我：<br>
+                            • "原神 雷电将军怎么培养"<br>
+                            • "黑神话悟空 虎先锋打法"<br>
+                            • "今天天气怎么样"
+                        </div>
+                    </div>
+                `;
+            }
+        }
 
         // 默认游戏名称列表
         const defaultGameNames = [
@@ -500,6 +554,14 @@
             messageDiv.appendChild(bubble);
             chatArea.appendChild(messageDiv);
             chatArea.scrollTop = chatArea.scrollHeight;
+            
+            // 保存到对话历史
+            conversationHistory.push({
+                role: isUser ? 'user' : 'assistant',
+                content: text,
+                timestamp: new Date().toISOString()
+            });
+            saveConversationHistory();
             
             return messageDiv;
         }
@@ -623,6 +685,9 @@
 
         // 页面加载时检查连接
         checkConnection();
+        
+        // 加载对话历史
+        loadConversationHistory();
         
         // 每 5 秒检查一次连接
         setInterval(checkConnection, 5000);
