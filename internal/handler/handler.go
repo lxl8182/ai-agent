@@ -23,6 +23,12 @@ type ChatResponse struct {
 func SetupRouter(agentService *agent.AgentService, serverCfg config.ServerConfig) *gin.Engine {
 	router := gin.Default()
 
+	// 提供静态文件（前端页面）
+	router.Static("/web", "./web")
+	router.GET("/", func(c *gin.Context) {
+		c.File("./web/index.html")
+	})
+
 	// 设置超时
 	router.Use(func(c *gin.Context) {
 		timeout := time.Duration(serverCfg.WriteTimeout) * time.Second
