@@ -321,6 +321,7 @@
         <div class="header">
             <h1>🎮 AI 游戏攻略助手</h1>
             <p>智能对话 + 自动搜索游戏攻略</p>
+            <p style="font-size: 12px; color: #999; margin-top: 5px;">💡 优化模式：保留用户最近3条 + AI最近1条消息</p>
         </div>
 
         <div class="status-bar">
@@ -675,23 +676,32 @@
             showTyping();
 
             try {
-                // 构建消息历史（包含当前消息）
-                const messages = [
-                    ...conversationHistory.slice(-10).map(msg => ({
+                // 智能构建消息历史：用户最近3条 + AI最近1条
+                const userMessages = conversationHistory.filter(msg => msg.role === 'user').slice(-3);
+                const aiMessages = conversationHistory.filter(msg => msg.role === 'assistant').slice(-1);
+                
+                // 合并并按时间排序
+                const contextMessages = [...userMessages, ...aiMessages]
+                    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+                    .map(msg => ({
                         role: msg.role,
                         content: msg.content
-                    })),
+                    }));
+                
+                // 添加当前消息
+                const messages = [
+                    ...contextMessages,
                     { role: 'user', content: text }
                 ];
 
-                // 调用后端 LLM API，发送完整的对话历史
+                // 调用后端 LLM API，发送优化的对话历史
                 const response = await fetch(`${API_BASE}/api/v1/chat`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        messages: messages  // 发送完整的历史记录
+                        messages: messages  // 发送优化的历史记录
                     })
                 });
 
