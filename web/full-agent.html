@@ -641,14 +641,23 @@
             showTyping();
 
             try {
-                // 调用后端 LLM API
-                const response = await fetch(`${API_BASE}/api/v1/smart-chat`, {
+                // 构建消息历史（包含当前消息）
+                const messages = [
+                    ...conversationHistory.slice(-10).map(msg => ({
+                        role: msg.role,
+                        content: msg.content
+                    })),
+                    { role: 'user', content: text }
+                ];
+
+                // 调用后端 LLM API，发送完整的对话历史
+                const response = await fetch(`${API_BASE}/api/v1/chat`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        message: text
+                        messages: messages  // 发送完整的历史记录
                     })
                 });
 
